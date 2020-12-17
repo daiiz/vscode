@@ -23,6 +23,8 @@ import { IEditorService } from 'vs/workbench/services/editor/common/editorServic
 import { IInstantiationService } from 'vs/platform/instantiation/common/instantiation';
 import { ITheme, registerThemingParticipant, ICssStyleCollector } from 'vs/platform/theme/common/themeService';
 import { IMAGE_PREVIEW_BORDER } from 'vs/workbench/common/theme';
+import { DpiAwareImage } from './dpi-aware-image/index';
+window.customElements.define(DpiAwareImage.is, DpiAwareImage);
 
 export interface IResourceDescriptor {
 	readonly resource: URI;
@@ -527,8 +529,12 @@ class InlineImageView {
 		DOM.clearNode(container);
 		DOM.addClasses(container, 'image', 'zoom-in');
 
-		image = DOM.append(container, DOM.$<HTMLImageElement>('img.scale-to-fit'));
-		image.style.visibility = 'hidden';
+		// image = DOM.append(container, DOM.$<HTMLImageElement>('img.scale-to-fit'));
+		const dpiAwareImage = document.createElement('dpi-aware-image');
+		dpiAwareImage.className = 'scale-to-fit';
+		image = DOM.append(container, dpiAwareImage);
+		// image.style.visibility = 'hidden';
+		image.style.visibility = 'visible';
 
 		disposables.add(DOM.addDisposableListener(image, DOM.EventType.LOAD, e => {
 			if (!image) {
@@ -552,14 +558,15 @@ class InlineImageView {
 		}));
 
 		InlineImageView.imageSrc(descriptor, fileService).then(src => {
-			const img = container.querySelector('img');
+			// const img = container.querySelector('img');
+			const img = container.querySelector('dpi-aware-image');
 			if (img) {
 				if (typeof src === 'string') {
-					img.src = src;
+					img.setAttribute('src', src);
 				} else {
 					const url = URL.createObjectURL(src);
 					disposables.add(toDisposable(() => URL.revokeObjectURL(url)));
-					img.src = url;
+					img.setAttribute('src', url);
 				}
 			}
 		});
